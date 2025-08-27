@@ -64,7 +64,7 @@ class MarkdownFlow:
     def __init__(
         self,
         document: str,
-        llm_provider: LLMProvider | None,
+        llm_provider: LLMProvider | None = None,
         document_prompt: str | None = None,
         interaction_prompt: str | None = None,
         interaction_error_prompt: str | None = None,
@@ -121,7 +121,7 @@ class MarkdownFlow:
     def get_all_blocks(self) -> list[Block]:
         """Parse document and get all blocks."""
         if self._blocks is not None:
-            return self._blocks  # type: ignore[unreachable]
+            return self._blocks
 
         content = self._document.strip()
         segments = re.split(BLOCK_SEPARATOR, content)
@@ -151,7 +151,7 @@ class MarkdownFlow:
                         block = Block(content=part, block_type=block_type, index=len(final_blocks))
                         final_blocks.append(block)
 
-        self._blocks = final_blocks  # type: ignore[assignment]
+        self._blocks = final_blocks
         return self._blocks
 
     def get_block(self, index: int) -> Block:
@@ -247,10 +247,7 @@ class MarkdownFlow:
                 raise ValueError(LLM_PROVIDER_REQUIRED_ERROR)
 
             async def stream_generator():
-                if not self._llm_provider:
-                    return
-                provider: LLMProvider = self._llm_provider
-                async for chunk in await provider.stream(messages):
+                async for chunk in self._llm_provider.stream(messages):  # type: ignore[attr-defined]
                     yield LLMResult(content=chunk, prompt=messages[-1]["content"])
 
             return stream_generator()
@@ -321,7 +318,7 @@ class MarkdownFlow:
             # With LLM provider, collect full response then return once
             async def stream_generator():
                 full_response = ""
-                async for chunk in await self._llm_provider.stream(messages):
+                async for chunk in self._llm_provider.stream(messages):  # type: ignore[attr-defined]
                     full_response += chunk
 
                 # Reconstruct final interaction content
@@ -457,7 +454,7 @@ class MarkdownFlow:
 
             async def stream_generator():
                 full_response = ""
-                async for chunk in await self._llm_provider.stream(messages):
+                async for chunk in self._llm_provider.stream(messages):  # type: ignore[attr-defined]
                     full_response += chunk
 
                 # Parse complete response and convert to LLMResult
@@ -565,7 +562,7 @@ class MarkdownFlow:
 
             async def stream_generator():
                 full_response = ""
-                async for chunk in await self._llm_provider.stream(messages):
+                async for chunk in self._llm_provider.stream(messages):  # type: ignore[attr-defined]
                     full_response += chunk
                     # For validation scenario, don't output chunks in real-time, only final result
 
@@ -602,7 +599,7 @@ class MarkdownFlow:
                 return LLMResult(content=error_message)
 
             async def stream_generator():
-                async for chunk in await self._llm_provider.stream(messages):
+                async for chunk in self._llm_provider.stream(messages):  # type: ignore[attr-defined]
                     yield LLMResult(content=chunk, prompt=messages[-1]["content"])
 
             return stream_generator()
