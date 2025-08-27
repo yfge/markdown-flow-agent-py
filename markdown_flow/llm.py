@@ -5,9 +5,10 @@ Provides LLM provider interfaces and related data models, supporting multiple pr
 """
 
 from abc import ABC, abstractmethod
+from collections.abc import AsyncGenerator
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, AsyncGenerator, Dict, List, Optional
+from typing import Any
 
 from .constants import NO_LLM_PROVIDER_ERROR
 
@@ -25,9 +26,9 @@ class LLMResult:
     """Unified LLM processing result."""
 
     content: str = ""  # Final content
-    prompt: Optional[str] = None  # Used prompt
-    variables: Optional[Dict[str, str]] = None  # Extracted variables
-    metadata: Optional[Dict[str, Any]] = None  # Metadata
+    prompt: str | None = None  # Used prompt
+    variables: dict[str, str] | None = None  # Extracted variables
+    metadata: dict[str, Any] | None = None  # Metadata
 
     def __bool__(self):
         """Support boolean evaluation."""
@@ -38,7 +39,7 @@ class LLMProvider(ABC):
     """Abstract LLM provider interface."""
 
     @abstractmethod
-    async def complete(self, messages: List[Dict[str, str]]) -> str:
+    async def complete(self, messages: list[dict[str, str]]) -> str:
         """
         Non-streaming LLM call.
 
@@ -51,10 +52,9 @@ class LLMProvider(ABC):
         Raises:
             ValueError: When LLM call fails
         """
-        pass
 
     @abstractmethod
-    async def stream(self, messages: List[Dict[str, str]]) -> AsyncGenerator[str, None]:
+    async def stream(self, messages: list[dict[str, str]]) -> AsyncGenerator[str, None]:
         """
         Streaming LLM call.
 
@@ -67,15 +67,13 @@ class LLMProvider(ABC):
         Raises:
             ValueError: When LLM call fails
         """
-        pass
 
 
 class NoLLMProvider(LLMProvider):
     """Empty LLM provider for prompt-only scenarios."""
 
-    async def complete(self, messages: List[Dict[str, str]]) -> str:
+    async def complete(self, messages: list[dict[str, str]]) -> str:
         raise NotImplementedError(NO_LLM_PROVIDER_ERROR)
 
-    async def stream(self, messages: List[Dict[str, str]]) -> AsyncGenerator[str, None]:
+    async def stream(self, messages: list[dict[str, str]]) -> AsyncGenerator[str, None]:
         raise NotImplementedError(NO_LLM_PROVIDER_ERROR)
-        yield ""  # pragma: no cover

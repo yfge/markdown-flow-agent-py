@@ -6,22 +6,23 @@ Constants for document parsing, variable matching, validation, and other core fu
 
 import re
 
+
 # Pre-compiled regex patterns
 COMPILED_PERCENT_VARIABLE_REGEX = re.compile(
     r"%\{\{([^}]+)\}\}"  # Match %{{variable}} format for preserved variables
 )
 
 # Interaction regex base patterns
-INTERACTION_PATTERN = r'\?\[([^\]]*)\](?!\()'  # Base pattern with capturing group for content extraction
-INTERACTION_PATTERN_NON_CAPTURING = r'\?\[[^\]]*\](?!\()'  # Non-capturing version for block splitting
-INTERACTION_PATTERN_SPLIT = r'(\?\[[^\]]*\](?!\())' # Pattern for re.split() with outer capturing group
+INTERACTION_PATTERN = r"\?\[([^\]]*)\](?!\()"  # Base pattern with capturing group for content extraction
+INTERACTION_PATTERN_NON_CAPTURING = r"\?\[[^\]]*\](?!\()"  # Non-capturing version for block splitting
+INTERACTION_PATTERN_SPLIT = r"(\?\[[^\]]*\](?!\())"  # Pattern for re.split() with outer capturing group
 
 # InteractionParser specific regex patterns
 COMPILED_INTERACTION_REGEX = re.compile(INTERACTION_PATTERN)  # Main interaction pattern matcher
 COMPILED_LAYER1_INTERACTION_REGEX = COMPILED_INTERACTION_REGEX  # Layer 1: Basic format validation (alias)
-COMPILED_LAYER2_VARIABLE_REGEX = re.compile(r'^%\{\{([^}]+)\}\}(.*)$')  # Layer 2: Variable detection
-COMPILED_LAYER3_ELLIPSIS_REGEX = re.compile(r'^(.*?)\.\.\.(.*)')  # Layer 3: Split content around ellipsis
-COMPILED_LAYER3_BUTTON_VALUE_REGEX = re.compile(r'^(.+?)//(.+)$')  # Layer 3: Parse Button//value format
+COMPILED_LAYER2_VARIABLE_REGEX = re.compile(r"^%\{\{([^}]+)\}\}(.*)$")  # Layer 2: Variable detection
+COMPILED_LAYER3_ELLIPSIS_REGEX = re.compile(r"^(.*?)\.\.\.(.*)")  # Layer 3: Split content around ellipsis
+COMPILED_LAYER3_BUTTON_VALUE_REGEX = re.compile(r"^(.+?)//(.+)$")  # Layer 3: Parse Button//value format
 COMPILED_BRACE_VARIABLE_REGEX = re.compile(
     r"(?<!%)\{\{([^}]+)\}\}"  # Match {{variable}} format for replaceable variables
 )
@@ -29,9 +30,7 @@ COMPILED_INTERACTION_CONTENT_RECONSTRUCT_REGEX = re.compile(
     r"(\?\[.*?\.\.\.).*?(\])"  # Reconstruct interaction content: prefix + question + suffix
 )
 COMPILED_BRACKETS_CLEANUP_REGEX = re.compile(r"[\[\]()]")
-COMPILED_VARIABLE_REFERENCE_CLEANUP_REGEX = re.compile(
-    r"%\{\{.*?\}\}"
-)
+COMPILED_VARIABLE_REFERENCE_CLEANUP_REGEX = re.compile(r"%\{\{.*?\}\}")
 COMPILED_WHITESPACE_CLEANUP_REGEX = re.compile(r"\s+")
 
 # Document parsing constants (using shared INTERACTION_PATTERN defined above)
@@ -45,17 +44,13 @@ OUTPUT_INSTRUCTION_PREFIX = "[输出]"
 OUTPUT_INSTRUCTION_SUFFIX = "[/输出]"
 
 # System message templates
-DEFAULT_VALIDATION_SYSTEM_MESSAGE = (
-    "你是一个输入验证助手，需要严格按照指定的格式和规则处理用户输入。"
-)
+DEFAULT_VALIDATION_SYSTEM_MESSAGE = "你是一个输入验证助手，需要严格按照指定的格式和规则处理用户输入。"
 
 # Interaction prompt templates
 DEFAULT_INTERACTION_PROMPT = "请将后面交互提示改写得更个性化和友好，长度尽量和原始内容一致，保持原有的功能性和变量格式不变："
 
 # Interaction error prompt templates
-DEFAULT_INTERACTION_ERROR_PROMPT = (
-    "请将以下错误信息改写得更加友好和个性化，帮助用户理解问题并给出建设性的引导："
-)
+DEFAULT_INTERACTION_ERROR_PROMPT = "请将以下错误信息改写得更加友好和个性化，帮助用户理解问题并给出建设性的引导："
 
 # Detailed interaction rendering instructions
 INTERACTION_RENDER_INSTRUCTIONS = """
