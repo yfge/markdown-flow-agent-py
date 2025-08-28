@@ -1,8 +1,8 @@
 # MarkdownFlow Agent (Python)
 
-MarkdownFlow Agent is a library designed to transform MarkdownFlow documents into personalized & interactive pages.
+MarkdownFlow Agent is a library designed to transform MarkdownFlow document into personalized content.
 
-MarkdownFlow (also known as MDFlow) extends standard Markdown with AI-powered intelligence to create personalized, interactive documents. The tagline: **"Write Once, Deliver Personally"**.
+MarkdownFlow (also known as MDFlow) extends standard Markdown with AI-powered intelligence to create personalized, interactive pages. The tagline: **"Write Once, Deliver Personally"**.
 
 Learn more about MarkdownFlow at [markdownflow.ai](https://markdownflow.ai).
 
