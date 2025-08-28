@@ -14,8 +14,6 @@ class MarkdownFlowError(Exception):
     exception handling and catching.
     """
 
-    pass
-
 
 class BlockIndexError(MarkdownFlowError):
     """
@@ -27,8 +25,6 @@ class BlockIndexError(MarkdownFlowError):
         - Accessing block index out of range
         - Accessing negative index
     """
-
-    pass
 
 
 class ValidationError(MarkdownFlowError):
@@ -42,5 +38,3 @@ class ValidationError(MarkdownFlowError):
         - Validation process execution failure
         - Attempting validation on non-interactive blocks
     """
-
-    pass

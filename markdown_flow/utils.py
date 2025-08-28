@@ -7,15 +7,15 @@ Collection of utility functions for document parsing, variable extraction, and t
 import json
 import re
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from .constants import (
     COMPILED_BRACE_VARIABLE_REGEX,
     COMPILED_INTERACTION_REGEX,
     COMPILED_LAYER1_INTERACTION_REGEX,
     COMPILED_LAYER2_VARIABLE_REGEX,
-    COMPILED_LAYER3_ELLIPSIS_REGEX,
     COMPILED_LAYER3_BUTTON_VALUE_REGEX,
+    COMPILED_LAYER3_ELLIPSIS_REGEX,
     COMPILED_PERCENT_VARIABLE_REGEX,
     CONTEXT_CONVERSATION_TEMPLATE,
     CONTEXT_QUESTION_MARKER,
@@ -33,7 +33,7 @@ from .constants import (
 )
 
 
-def extract_variables_from_text(text: str) -> List[str]:
+def extract_variables_from_text(text: str) -> list[str]:
     """
     Extract all variable names from text.
 
@@ -94,12 +94,12 @@ def is_preserved_content_block(content: str) -> bool:
 
             match = re.match(r"^===(.+)===$", stripped_line)
             if not match:
-                all_inline_format = False
+                all_inline_format = False  # type: ignore[unreachable]
                 break
             # Ensure inner content exists and contains no equals signs
             inner_content = match.group(1).strip()
             if not inner_content or "=" in inner_content:
-                all_inline_format = False
+                all_inline_format = False  # type: ignore[unreachable]
                 break
 
     # If all lines are inline format, return directly
@@ -137,7 +137,7 @@ def is_preserved_content_block(content: str) -> bool:
     return has_preserve_blocks and not has_content_outside and state == "OUTSIDE"
 
 
-def extract_interaction_question(content: str) -> Optional[str]:
+def extract_interaction_question(content: str) -> str | None:
     """
     Extract question text from interaction block content.
 
@@ -150,7 +150,7 @@ def extract_interaction_question(content: str) -> Optional[str]:
     # Match interaction format: ?[...] using pre-compiled regex
     match = COMPILED_INTERACTION_REGEX.match(content.strip())
     if not match:
-        return None
+        return None  # type: ignore[unreachable]
 
     # Extract interaction content (remove ?[ and ])
     interaction_content = match.group(1) if match.groups() else match.group(0)[2:-1]
@@ -162,7 +162,7 @@ def extract_interaction_question(content: str) -> Optional[str]:
         if len(parts) > 1:
             return parts[1].strip()
 
-    return None
+    return None  # type: ignore[unreachable]
 
 
 class InteractionType(Enum):
@@ -176,16 +176,14 @@ class InteractionType(Enum):
 
 class InteractionParser:
     """
-    Three-layer interaction parser for ?[] format validation, 
+    Three-layer interaction parser for ?[] format validation,
     variable detection, and content parsing.
     """
 
-
     def __init__(self):
         """Initialize parser."""
-        pass
 
-    def parse(self, content: str) -> Dict[str, Any]:
+    def parse(self, content: str) -> dict[str, Any]:
         """
         Main parsing method.
 
@@ -207,13 +205,12 @@ class InteractionParser:
             # Layer 3: Specific content parsing
             if has_variable:
                 return self._layer3_parse_variable_interaction(variable_name, remaining_content)
-            else:
-                return self._layer3_parse_display_buttons(inner_content)
+            return self._layer3_parse_display_buttons(inner_content)
 
         except Exception as e:
             return self._create_error_result(f"Parsing error: {str(e)}")
 
-    def _layer1_validate_format(self, content: str) -> Optional[str]:
+    def _layer1_validate_format(self, content: str) -> str | None:
         """
         Layer 1: Validate ?[] format and extract content.
 
@@ -227,7 +224,7 @@ class InteractionParser:
         match = COMPILED_LAYER1_INTERACTION_REGEX.search(content)
 
         if not match:
-            return None
+            return None  # type: ignore[unreachable]
 
         # Ensure matched content is complete (no other text)
         matched_text = match.group(0)
@@ -236,7 +233,7 @@ class InteractionParser:
 
         return match.group(1)
 
-    def _layer2_detect_variable(self, inner_content: str) -> Tuple[bool, Optional[str], str]:
+    def _layer2_detect_variable(self, inner_content: str) -> tuple[bool, str | None, str]:
         """
         Layer 2: Detect variables and classify patterns.
 
@@ -250,14 +247,14 @@ class InteractionParser:
 
         if not match:
             # No variable, use entire content for display button parsing
-            return False, None, inner_content
+            return False, None, inner_content  # type: ignore[unreachable]
 
         variable_name = match.group(1).strip()
         remaining_content = match.group(2).strip()
 
         return True, variable_name, remaining_content
 
-    def _layer3_parse_variable_interaction(self, variable_name: str, content: str) -> Dict[str, Any]:
+    def _layer3_parse_variable_interaction(self, variable_name: str, content: str) -> dict[str, Any]:
         """
         Layer 3: Parse variable interactions (variable assignment type).
 
@@ -276,60 +273,56 @@ class InteractionParser:
             before_ellipsis = ellipsis_match.group(1).strip()
             question = ellipsis_match.group(2).strip()
 
-            if '|' in before_ellipsis and before_ellipsis:
+            if "|" in before_ellipsis and before_ellipsis:
                 # Button group + text input
                 buttons = self._parse_buttons(before_ellipsis)
                 return {
-                    'type': InteractionType.BUTTONS_WITH_TEXT,
-                    'variable': variable_name,
-                    'buttons': buttons,
-                    'question': question
+                    "type": InteractionType.BUTTONS_WITH_TEXT,
+                    "variable": variable_name,
+                    "buttons": buttons,
+                    "question": question,
                 }
-            else:
-                # Pure text input or single button + text
-                if before_ellipsis:
-                    # Has prefix buttons
-                    buttons = self._parse_buttons(before_ellipsis)
-                    return {
-                        'type': InteractionType.BUTTONS_WITH_TEXT,
-                        'variable': variable_name,
-                        'buttons': buttons,
-                        'question': question
-                    }
-                else:
-                    # Pure text input
-                    return {
-                        'type': InteractionType.TEXT_ONLY,
-                        'variable': variable_name,
-                        'question': question
-                    }
-        else:
-            # No ... separator
-            if '|' in content and content:
-                # Pure button group
-                buttons = self._parse_buttons(content)
+            # Pure text input or single button + text
+            if before_ellipsis:
+                # Has prefix buttons
+                buttons = self._parse_buttons(before_ellipsis)
                 return {
-                    'type': InteractionType.BUTTONS_ONLY,
-                    'variable': variable_name,
-                    'buttons': buttons
+                    "type": InteractionType.BUTTONS_WITH_TEXT,
+                    "variable": variable_name,
+                    "buttons": buttons,
+                    "question": question,
                 }
-            elif content:
-                # Single button
-                button = self._parse_single_button(content)
-                return {
-                    'type': InteractionType.BUTTONS_ONLY,
-                    'variable': variable_name,
-                    'buttons': [button]
-                }
-            else:
-                # Pure text input (no hint)
-                return {
-                    'type': InteractionType.TEXT_ONLY,
-                    'variable': variable_name,
-                    'question': ''
-                }
+            # Pure text input
+            return {
+                "type": InteractionType.TEXT_ONLY,
+                "variable": variable_name,
+                "question": question,
+            }
+        # No ... separator
+        if "|" in content and content:  # type: ignore[unreachable]
+            # Pure button group
+            buttons = self._parse_buttons(content)
+            return {
+                "type": InteractionType.BUTTONS_ONLY,
+                "variable": variable_name,
+                "buttons": buttons,
+            }
+        if content:  # type: ignore[unreachable]
+            # Single button
+            button = self._parse_single_button(content)
+            return {
+                "type": InteractionType.BUTTONS_ONLY,
+                "variable": variable_name,
+                "buttons": [button],
+            }
+        # Pure text input (no hint)
+        return {
+            "type": InteractionType.TEXT_ONLY,
+            "variable": variable_name,
+            "question": "",
+        }
 
-    def _layer3_parse_display_buttons(self, content: str) -> Dict[str, Any]:
+    def _layer3_parse_display_buttons(self, content: str) -> dict[str, Any]:
         """
         Layer 3: Parse display buttons (non-variable assignment type).
 
@@ -342,26 +335,19 @@ class InteractionParser:
         if not content:
             # Empty content: ?[]
             return {
-                'type': InteractionType.NON_ASSIGNMENT_BUTTON,
-                'buttons': [{'display': '', 'value': ''}]
+                "type": InteractionType.NON_ASSIGNMENT_BUTTON,
+                "buttons": [{"display": "", "value": ""}],
             }
 
-        if '|' in content:
+        if "|" in content:
             # Multiple buttons
             buttons = self._parse_buttons(content)
-            return {
-                'type': InteractionType.NON_ASSIGNMENT_BUTTON,
-                'buttons': buttons
-            }
-        else:
-            # Single button
-            button = self._parse_single_button(content)
-            return {
-                'type': InteractionType.NON_ASSIGNMENT_BUTTON,
-                'buttons': [button]
-            }
+            return {"type": InteractionType.NON_ASSIGNMENT_BUTTON, "buttons": buttons}
+        # Single button
+        button = self._parse_single_button(content)
+        return {"type": InteractionType.NON_ASSIGNMENT_BUTTON, "buttons": [button]}
 
-    def _parse_buttons(self, content: str) -> List[Dict[str, str]]:
+    def _parse_buttons(self, content: str) -> list[dict[str, str]]:
         """
         Parse button group.
 
@@ -372,7 +358,7 @@ class InteractionParser:
             List of button dictionaries
         """
         buttons = []
-        for button_text in content.split('|'):
+        for button_text in content.split("|"):
             button_text = button_text.strip()
             if button_text:
                 button = self._parse_single_button(button_text)
@@ -380,7 +366,7 @@ class InteractionParser:
 
         return buttons
 
-    def _parse_single_button(self, button_text: str) -> Dict[str, str]:
+    def _parse_single_button(self, button_text: str) -> dict[str, str]:
         """
         Parse single button, supports Button//value format.
 
@@ -398,11 +384,10 @@ class InteractionParser:
         if match:
             display = match.group(1).strip()
             value = match.group(2).strip()
-            return {'display': display, 'value': value}
-        else:
-            return {'display': button_text, 'value': button_text}
+            return {"display": display, "value": value}
+        return {"display": button_text, "value": button_text}  # type: ignore[unreachable]
 
-    def _create_error_result(self, error_message: str) -> Dict[str, Any]:
+    def _create_error_result(self, error_message: str) -> dict[str, Any]:
         """
         Create error result.
 
@@ -412,19 +397,13 @@ class InteractionParser:
         Returns:
             Error result dictionary
         """
-        return {
-            'type': None,
-            'error': error_message
-        }
-
-
-
+        return {"type": None, "error": error_message}  # type: ignore[unreachable]
 
 
 def generate_smart_validation_template(
     target_variable: str,
-    context: Optional[List[Dict[str, Any]]] = None,
-    interaction_question: Optional[str] = None,
+    context: list[dict[str, Any]] | None = None,
+    interaction_question: str | None = None,
 ) -> str:
     """
     Generate smart validation template based on context and question.
@@ -449,11 +428,9 @@ def generate_smart_validation_template(
         # Add conversation context
         if context:
             for msg in context:
-                if msg.get("role") == "assistant" and CONTEXT_QUESTION_MARKER not in msg.get(
-                    "content", ""
-                ):
+                if msg.get("role") == "assistant" and CONTEXT_QUESTION_MARKER not in msg.get("content", ""):
                     # Other assistant messages as context (exclude extracted questions)
-                    context_parts.append(CONTEXT_CONVERSATION_TEMPLATE.format(content=msg.get('content', '')))
+                    context_parts.append(CONTEXT_CONVERSATION_TEMPLATE.format(content=msg.get("content", "")))
 
         if context_parts:
             context_info = "\n\n".join(context_parts)
@@ -461,13 +438,13 @@ def generate_smart_validation_template(
     # Use template from constants
     # Note: {sys_user_input} will be replaced later in _build_validation_messages
     return SMART_VALIDATION_TEMPLATE.format(
-        target_variable=target_variable, 
+        target_variable=target_variable,
         context_info=context_info,
-        sys_user_input="{sys_user_input}"  # Keep placeholder for later replacement
+        sys_user_input="{sys_user_input}",  # Keep placeholder for later replacement
     ).strip()
 
 
-def parse_json_response(response_text: str) -> Dict[str, Any]:
+def parse_json_response(response_text: str) -> dict[str, Any]:
     """
     Parse JSON response supporting multiple formats.
 
@@ -503,8 +480,7 @@ def parse_json_response(response_text: str) -> Dict[str, Any]:
         json_match = re.search(r"\{[^}]+\}", text)
         if json_match:
             return json.loads(json_match.group())
-        else:
-            raise ValueError(JSON_PARSE_ERROR)
+        raise ValueError(JSON_PARSE_ERROR)
 
 
 def process_output_instructions(content: str) -> str:
@@ -548,7 +524,7 @@ def process_output_instructions(content: str) -> str:
             elif line.strip() == TRIPLE_EQUALS_DELIMITER:
                 # Multiline format start
                 i += 1
-                output_content_lines = []
+                output_content_lines: list[str] = []
 
                 # Collect multiline content
                 while i < len(lines):
@@ -563,36 +539,25 @@ def process_output_instructions(content: str) -> str:
                             first_space = output_content.find(" ")
                             first_newline = output_content.find("\n")
 
-                            if first_space != -1 and (
-                                first_newline == -1 or first_space < first_newline
-                            ):
+                            if first_space != -1 and (first_newline == -1 or first_space < first_newline):
                                 hash_prefix = output_content[: first_space + 1]
-                                output_content = output_content[
-                                    first_space + 1 :
-                                ].strip()
+                                output_content = output_content[first_space + 1 :].strip()
                             elif first_newline != -1:
                                 hash_prefix = output_content[: first_newline + 1]
-                                output_content = output_content[
-                                    first_newline + 1 :
-                                ].strip()
+                                output_content = output_content[first_newline + 1 :].strip()
 
                         # Build output instruction
                         if hash_prefix:
-                            result_lines.append(
-                                f"{OUTPUT_INSTRUCTION_PREFIX}{hash_prefix}{output_content}{OUTPUT_INSTRUCTION_SUFFIX}"
-                            )
+                            result_lines.append(f"{OUTPUT_INSTRUCTION_PREFIX}{hash_prefix}{output_content}{OUTPUT_INSTRUCTION_SUFFIX}")
                         else:
-                            result_lines.append(
-                                f"{OUTPUT_INSTRUCTION_PREFIX}{output_content}{OUTPUT_INSTRUCTION_SUFFIX}"
-                            )
+                            result_lines.append(f"{OUTPUT_INSTRUCTION_PREFIX}{output_content}{OUTPUT_INSTRUCTION_SUFFIX}")
 
                         has_output_instruction = True
                         i += 1
                         break
-                    else:
-                        # Continue collecting content
-                        output_content_lines.append(current_line)
-                        i += 1
+                    # Continue collecting content
+                    output_content_lines.append(current_line)
+                    i += 1
                 else:
                     # No end marker found, rollback processing
                     result_lines.append(lines[i - len(output_content_lines) - 1])
@@ -645,7 +610,7 @@ def extract_preserved_content(content: str) -> str:
             inner_content = match.group(1).strip()
             if inner_content and "=" not in inner_content:
                 result_lines.append(inner_content)
-        elif stripped_line == TRIPLE_EQUALS_DELIMITER:
+        elif stripped_line == TRIPLE_EQUALS_DELIMITER:  # type: ignore[unreachable]
             # Multiline format delimiter, skip
             continue
         else:
@@ -655,9 +620,7 @@ def extract_preserved_content(content: str) -> str:
     return "\n".join(result_lines)
 
 
-def parse_validation_response(
-    llm_response: str, original_input: str, target_variable: str
-) -> Dict[str, Any]:
+def parse_validation_response(llm_response: str, original_input: str, target_variable: str) -> dict[str, Any]:
     """
     Parse LLM validation response, returning standard format.
 
@@ -686,7 +649,7 @@ def parse_validation_response(
 
                 return {"content": "", "variables": parse_vars}
 
-            elif result == VALIDATION_RESPONSE_ILLEGAL:
+            if result == VALIDATION_RESPONSE_ILLEGAL:
                 # Validation failed
                 reason = parsed_response.get("reason", VALIDATION_ILLEGAL_DEFAULT_REASON)
                 return {"content": reason, "variables": None}
@@ -701,13 +664,10 @@ def parse_validation_response(
     # Check against standard response format
     if "ok" in response_lower or "valid" in response_lower:
         return {"content": "", "variables": {target_variable: original_input.strip()}}
-    else:
-        return {"content": llm_response, "variables": None}
+    return {"content": llm_response, "variables": None}
 
 
-def replace_variables_in_text(
-    text: str, variables: Dict[str, str]
-) -> str:
+def replace_variables_in_text(text: str, variables: dict[str, str]) -> str:
     """
     Replace variables in text, undefined or empty variables are auto-assigned "UNKNOWN".
 
@@ -732,11 +692,11 @@ def replace_variables_in_text(
     # Initialize variables as empty dict (if None)
     if not variables:
         variables = {}
-    
+
     # Find all {{variable}} format variable references
     variable_pattern = r"\{\{([^{}]+?)\}\}"
     matches = re.findall(variable_pattern, text)
-    
+
     # Assign "UNKNOWN" to undefined variables
     for var_name in matches:
         var_name = var_name.strip()

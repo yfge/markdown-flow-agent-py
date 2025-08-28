@@ -5,7 +5,6 @@ Simplified and refactored data models focused on core functionality.
 """
 
 from dataclasses import dataclass, field
-from typing import List, Optional, Union
 
 from .enums import BlockType, InputType
 from .utils import extract_variables_from_text
@@ -38,8 +37,8 @@ class InteractionValidationConfig:
         enable_custom_validation (bool): Enable custom validation, defaults to True
     """
 
-    validation_template: Optional[str] = None
-    target_variable: Optional[str] = None
+    validation_template: str | None = None
+    target_variable: str | None = None
     enable_custom_validation: bool = True
 
 
@@ -56,9 +55,9 @@ class Block:
     """
 
     content: str
-    block_type: Union[BlockType, str]
+    block_type: BlockType | str
     index: int = 0
-    variables: List[str] = field(default_factory=list)
+    variables: list[str] = field(default_factory=list)
 
     def __post_init__(self):
         """Post-initialization processing."""
@@ -71,9 +70,7 @@ class Block:
                 "preserved_content": BlockType.PRESERVED_CONTENT,
             }
 
-            self.block_type = type_mapping.get(
-                self.block_type, self._parse_block_type_fallback(self.block_type)
-            )
+            self.block_type = type_mapping.get(self.block_type, self._parse_block_type_fallback(self.block_type))
 
         # Auto-extract variables
         if not self.variables:

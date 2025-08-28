@@ -60,6 +60,7 @@ from .utils import (
     replace_variables_in_text,
 )
 
+
 # Public API
 __all__ = [
     # Core classes
