@@ -23,7 +23,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -33,12 +33,28 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install commitizen build twine
+          pip install commitizen build twine pre-commit ruff mypy
 
       - name: Configure Git
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+
+      - name: Install pre-commit hooks
+        run: |
+          pre-commit install
+
+      - name: Check branch protection status
+        id: branch-protection
+        run: |
+          # Check if we can push directly to main
+          if git push --dry-run origin main 2>/dev/null; then
+            echo "can_push_directly=true" >> $GITHUB_OUTPUT
+            echo "Branch allows direct push"
+          else
+            echo "can_push_directly=false" >> $GITHUB_OUTPUT
+            echo "Branch is protected, will need special handling"
+          fi
 
       - name: Bump version automatically
         id: bump-version
@@ -47,11 +63,53 @@ jobs:
           if cz bump --dry-run --changelog 2>/dev/null; then
             echo "bump_needed=true" >> $GITHUB_OUTPUT
             cz bump --changelog --yes
-            git push origin main --follow-tags
+
+            # Get the new version after bump
+            NEW_VERSION=$(python -c "import markdown_flow; print(markdown_flow.__version__)")
+            echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+            # Update pyproject.toml version configuration
+            sed -i.bak "s/version = \"[^\"]*\"/version = \"$NEW_VERSION\"/" pyproject.toml
+            sed -i.bak "s/changelog_start_rev = \"v[^\"]*\"/changelog_start_rev = \"v$NEW_VERSION\"/" pyproject.toml
+            rm -f pyproject.toml.bak
+
+            # Generate changelog content for release (without creating file)
+            CHANGELOG_CONTENT=$(cz changelog --dry-run)
+            echo "changelog_content<<EOF" >> $GITHUB_OUTPUT
+            echo "$CHANGELOG_CONTENT" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+
+            # Commit version files and pyproject.toml changes (no changelog file)
+            git add markdown_flow/__init__.py pyproject.toml
+            git commit -m "chore: update version config to $NEW_VERSION" || echo "No changes to commit"
+
+            # Push based on branch protection status
+            if [ "${{ steps.branch-protection.outputs.can_push_directly }}" = "true" ]; then
+              echo "Pushing directly to main branch..."
+              git push origin main --follow-tags
+            else
+              echo "Branch is protected, using alternative push strategy..."
+              # Try with different authentication methods
+              git push origin main --follow-tags || {
+                echo "Standard push failed, trying with force-with-lease..."
+                git push origin main --follow-tags --force-with-lease || {
+                  echo "All push attempts failed. This might be due to branch protection rules."
+                  echo "Please check repository settings or use a Personal Access Token (PAT_TOKEN)."
+                  echo "You can also temporarily disable branch protection for releases."
+                  exit 1
+                }
+              }
+            fi
           else
             echo "bump_needed=false" >> $GITHUB_OUTPUT
             echo "No version bump needed based on commit messages"
           fi
+
+      - name: Display changelog content
+        if: steps.bump-version.outputs.bump_needed == 'true'
+        run: |
+          echo "Generated changelog content:"
+          echo "${{ steps.bump-version.outputs.changelog_content }}"
 
       - name: Get version
         id: version
@@ -88,14 +146,19 @@ jobs:
           tag_name: ${{ steps.version.outputs.tag }}
           name: Release ${{ steps.version.outputs.tag }}
           body: |
-            ## Changes in ${{ steps.version.outputs.tag }}
-
-            See [CHANGELOG.md](https://github.com/ai-shifu/markdown-flow-agent-py/blob/main/CHANGELOG.md) for detailed changes.
+            ${{ steps.bump-version.outputs.changelog_content }}
 
             ## Installation
             ```bash
             pip install markdown-flow==${{ steps.version.outputs.version }}
             ```
+
+            ## What's Changed
+            This release includes the following changes:
+            - Automated version management with Commitizen
+            - Enhanced GitHub Actions workflow for releases
+            - Improved branch protection handling
+            - Streamlined changelog generation
           files: |
             dist/*
           draft: false
