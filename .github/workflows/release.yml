@@ -104,8 +104,8 @@ jobs:
             echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
             echo "New version will be: $NEW_VERSION"
 
-            # Generate changelog content from last tag to current commits
-            CHANGELOG_CONTENT=$(cz changelog --unreleased-version=$NEW_VERSION --dry-run 2>/dev/null || echo "Changelog generation failed")
+            # Generate changelog content from last tag to current commits (incremental only)
+            CHANGELOG_CONTENT=$(cz changelog --incremental --unreleased-version=$NEW_VERSION --dry-run 2>/dev/null || echo "Changelog generation failed")
             echo "changelog_content<<EOF" >> $GITHUB_OUTPUT
             echo "$CHANGELOG_CONTENT" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
