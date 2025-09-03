@@ -69,16 +69,12 @@ jobs:
           if cz bump --dry-run 2>/dev/null; then
             echo "bump_needed=true" >> $GITHUB_OUTPUT
 
-            # Get the new version that would be created
-            NEW_VERSION=$(cz bump --dry-run | grep "bump: version" | sed 's/.*→ //')
-            echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-
-            # Update only the commitizen version configuration before bumping
-            sed -i.bak "/^\[tool\.commitizen\]/,/^\[/ s/^version = \"[^\"]*\"/version = \"$NEW_VERSION\"/" pyproject.toml
-            rm -f pyproject.toml.bak
-
-            # Now run cz bump which will create a single commit with all changes
+            # Run cz bump which will create a single commit with all version changes
             cz bump --yes
+
+            # Get the new version after bump
+            NEW_VERSION=$(python -c "import markdown_flow; print(markdown_flow.__version__)")
+            echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
             # Generate changelog content for release (without creating file)
             CHANGELOG_CONTENT=$(cz changelog --dry-run)
