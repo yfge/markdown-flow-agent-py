@@ -42,7 +42,13 @@ jobs:
 
       - name: Install pre-commit hooks
         run: |
-          pre-commit install
+          # Skip pre-commit installation during local act testing
+          if [[ "${ACT:-false}" == "true" ]]; then
+            echo "Skipping pre-commit setup in act environment"
+            git config --global init.templateDir ""
+          else
+            pre-commit install
+          fi
 
       - name: Check branch protection status
         id: branch-protection
