@@ -60,9 +60,9 @@ jobs:
         id: bump-version
         run: |
           # Check if we need to bump version based on conventional commits
-          if cz bump --dry-run --changelog 2>/dev/null; then
+          if cz bump --dry-run 2>/dev/null; then
             echo "bump_needed=true" >> $GITHUB_OUTPUT
-            cz bump --changelog --yes
+            cz bump --yes
 
             # Get the new version after bump
             NEW_VERSION=$(python -c "import markdown_flow; print(markdown_flow.__version__)")
@@ -70,7 +70,6 @@ jobs:
 
             # Update pyproject.toml version configuration
             sed -i.bak "s/version = \"[^\"]*\"/version = \"$NEW_VERSION\"/" pyproject.toml
-            sed -i.bak "s/changelog_start_rev = \"v[^\"]*\"/changelog_start_rev = \"v$NEW_VERSION\"/" pyproject.toml
             rm -f pyproject.toml.bak
 
             # Generate changelog content for release (without creating file)
@@ -79,9 +78,9 @@ jobs:
             echo "$CHANGELOG_CONTENT" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
 
-            # Commit version files and pyproject.toml changes (no changelog file)
+            # Commit version files and pyproject.toml changes
             git add markdown_flow/__init__.py pyproject.toml
-            git commit -m "chore: update version config to $NEW_VERSION" || echo "No changes to commit"
+            git commit -m "chore: update version to $NEW_VERSION" || echo "No changes to commit"
 
             # Push based on branch protection status
             if [ "${{ steps.branch-protection.outputs.can_push_directly }}" = "true" ]; then
