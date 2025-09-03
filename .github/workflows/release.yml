@@ -42,7 +42,13 @@ jobs:
 
       - name: Install pre-commit hooks
         run: |
-          pre-commit install
+          # Skip pre-commit installation during local act testing
+          if [[ "${ACT:-false}" == "true" ]]; then
+            echo "Skipping pre-commit setup in act environment"
+            git config --global init.templateDir ""
+          else
+            pre-commit install
+          fi
 
       - name: Check branch protection status
         id: branch-protection
@@ -62,25 +68,23 @@ jobs:
           # Check if we need to bump version based on conventional commits
           if cz bump --dry-run 2>/dev/null; then
             echo "bump_needed=true" >> $GITHUB_OUTPUT
-            cz bump --yes
 
-            # Get the new version after bump
-            NEW_VERSION=$(python -c "import markdown_flow; print(markdown_flow.__version__)")
+            # Get the new version that would be created
+            NEW_VERSION=$(cz bump --dry-run | grep "bump: version" | sed 's/.*→ //')
             echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
-            # Update pyproject.toml version configuration
-            sed -i.bak "s/version = \"[^\"]*\"/version = \"$NEW_VERSION\"/" pyproject.toml
+            # Update only the commitizen version configuration before bumping
+            sed -i.bak "/^\[tool\.commitizen\]/,/^\[/ s/^version = \"[^\"]*\"/version = \"$NEW_VERSION\"/" pyproject.toml
             rm -f pyproject.toml.bak
+
+            # Now run cz bump which will create a single commit with all changes
+            cz bump --yes
 
             # Generate changelog content for release (without creating file)
             CHANGELOG_CONTENT=$(cz changelog --dry-run)
             echo "changelog_content<<EOF" >> $GITHUB_OUTPUT
             echo "$CHANGELOG_CONTENT" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
-
-            # Commit version files and pyproject.toml changes
-            git add markdown_flow/__init__.py pyproject.toml
-            git commit -m "chore: update version to $NEW_VERSION" || echo "No changes to commit"
 
             # Push based on branch protection status
             if [ "${{ steps.branch-protection.outputs.can_push_directly }}" = "true" ]; then

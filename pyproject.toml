@@ -37,7 +37,7 @@ version = {attr = "markdown_flow.__version__"}
 [tool.ruff]
 # Same as Black and previous Flake8 configuration
 line-length = 200
-target-version = "0.2.0"
+target-version = "py310"
 
 # Enable pycodestyle (`E`) and Pyflakes (`F`) codes by default
 # Plus additional useful rule categories
@@ -100,7 +100,7 @@ lines-after-imports = 2
 # =============================================================================
 [tool.mypy]
 # Basic settings
-python_version = "0.2.0"
+python_version = "3.10"
 strict = false
 warn_return_any = false
 warn_unused_configs = true
@@ -146,6 +146,7 @@ disallow_incomplete_defs = false
 name = "cz_conventional_commits"
 version = "0.2.0"
 tag_format = "v$major.$minor.$patch"
+update_changelog_on_bump = true
 annotated_tag = true
 gpg_sign = false
 version_files = [
