@@ -82,9 +82,16 @@ jobs:
           echo "📝 Recent commits:"
           git log --oneline -5
 
-          DRY_RUN_OUTPUT=$(cz bump --dry-run 2>&1)
-          echo "🧪 Commitizen dry-run output:"
-          echo "$DRY_RUN_OUTPUT"
+          # Try commitizen dry-run with error handling
+          if DRY_RUN_OUTPUT=$(cz bump --dry-run 2>&1); then
+            echo "🧪 Commitizen dry-run output:"
+            echo "$DRY_RUN_OUTPUT"
+          else
+            echo "⚠️ Commitizen dry-run failed with exit code $?, trying alternative detection..."
+            DRY_RUN_OUTPUT=$(cz bump --dry-run 2>&1 || true)
+            echo "🧪 Commitizen dry-run output (with errors):"
+            echo "$DRY_RUN_OUTPUT"
+          fi
 
           if echo "$DRY_RUN_OUTPUT" | grep -q "bump: version"; then
             echo "bump_needed=true" >> $GITHUB_OUTPUT
