@@ -117,8 +117,12 @@ jobs:
               echo "⚠️ Commitizen bump failed, trying manual tag creation..."
 
               # Manual tag creation as fallback
-              git tag "v$NEW_VERSION" -m "bump: version $(git describe --tags --abbrev=0 2>/dev/null || echo '0.0.0') → $NEW_VERSION"
-              echo "✅ Manual tag created: v$NEW_VERSION"
+              if git tag -l | grep -q "^v$NEW_VERSION$"; then
+                echo "⚠️ Tag v$NEW_VERSION already exists, skipping tag creation"
+              else
+                git tag "v$NEW_VERSION" -m "bump: version $(git describe --tags --abbrev=0 2>/dev/null || echo '0.0.0') → $NEW_VERSION"
+                echo "✅ Manual tag created: v$NEW_VERSION"
+              fi
             else
               echo "✅ Commitizen tag created successfully"
             fi
