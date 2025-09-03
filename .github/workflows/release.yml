@@ -69,12 +69,17 @@ jobs:
           if cz bump --dry-run 2>/dev/null; then
             echo "bump_needed=true" >> $GITHUB_OUTPUT
 
-            # Run cz bump which will create a single commit with all version changes
-            cz bump --yes
-
-            # Get the new version after bump
-            NEW_VERSION=$(python -c "import markdown_flow; print(markdown_flow.__version__)")
+            # Get the version that would be created (before creating the tag)
+            NEW_VERSION=$(cz bump --dry-run | grep "bump: version" | sed 's/.*→ //')
             echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+            # Create tag only (no file changes needed)
+            cz bump --yes
+          else
+            echo "bump_needed=false" >> $GITHUB_OUTPUT
+            echo "No version bump needed based on commit messages"
+            exit 0
+          fi
 
             # Generate changelog content for release using commitizen
             CHANGELOG_CONTENT=$(cz changelog --dry-run --incremental)
