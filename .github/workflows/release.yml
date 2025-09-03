@@ -69,6 +69,7 @@ jobs:
           # No pyproject.toml version updates needed - everything is tag-driven
 
           # Check if there are commits that warrant a version bump
+
           echo "🔍 Checking for conventional commits that warrant version bump..."
           echo "📋 Current commitizen config:"
           cz info || echo "⚠️ Commitizen info failed"
@@ -93,6 +94,7 @@ jobs:
             echo "$DRY_RUN_OUTPUT"
           fi
 
+
           if echo "$DRY_RUN_OUTPUT" | grep -q "bump: version"; then
             echo "bump_needed=true" >> $GITHUB_OUTPUT
             echo "Version bump detected based on conventional commits"
@@ -112,6 +114,7 @@ jobs:
             # All version info comes from git tags via dynamic version detection
             echo "Creating git tag..."
 
+
             # Try commitizen bump with error handling
             if ! cz bump --yes; then
               echo "⚠️ Commitizen bump failed, trying manual tag creation..."
@@ -126,6 +129,7 @@ jobs:
             else
               echo "✅ Commitizen tag created successfully"
             fi
+
 
             # Push based on branch protection status
             if [ "${{ steps.branch-protection.outputs.can_push_directly }}" = "true" ]; then
