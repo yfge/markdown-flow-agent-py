@@ -65,26 +65,24 @@ jobs:
       - name: Bump version automatically
         id: bump-version
         run: |
-          # Check if we need to bump version based on conventional commits
+          # Git-tag-based versioning: Version is determined entirely by git tags
+          # No pyproject.toml version updates needed - everything is tag-driven
           if cz bump --dry-run 2>/dev/null; then
             echo "bump_needed=true" >> $GITHUB_OUTPUT
 
-            # Get the new version that would be created
+            # Get the new version that commitizen would create based on conventional commits
             NEW_VERSION=$(cz bump --dry-run | grep "bump: version" | sed 's/.*→ //')
             echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
-            # Update only the commitizen version configuration before bumping
-            sed -i.bak "/^\[tool\.commitizen\]/,/^\[/ s/^version = \"[^\"]*\"/version = \"$NEW_VERSION\"/" pyproject.toml
-            rm -f pyproject.toml.bak
-
-            # Now run cz bump which will create a single commit with all changes
-            cz bump --yes
-
-            # Generate changelog content for release (without creating file)
-            CHANGELOG_CONTENT=$(cz changelog --dry-run)
+            # Generate changelog content from last tag to current commits
+            CHANGELOG_CONTENT=$(cz changelog --unreleased-version=$NEW_VERSION --dry-run)
             echo "changelog_content<<EOF" >> $GITHUB_OUTPUT
             echo "$CHANGELOG_CONTENT" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
+
+            # Create ONLY git tag - no file modifications needed
+            # All version info comes from git tags via dynamic version detection
+            cz bump --yes
 
             # Push based on branch protection status
             if [ "${{ steps.branch-protection.outputs.can_push_directly }}" = "true" ]; then

@@ -144,15 +144,13 @@ disallow_incomplete_defs = false
 # =============================================================================
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.3.0"
 tag_format = "v$major.$minor.$patch"
 update_changelog_on_bump = true
 annotated_tag = true
 gpg_sign = false
-version_files = [
-    "markdown_flow/__init__.py:__version__"
-]
+# Version is completely determined by git tags - no version_files needed
 bump_message = "bump: version $current_version → $new_version"
+version_provider = "scm"
 style = [
     ["qmark", "fg:#ff9d00 bold"],
     ["question", "bold"],
