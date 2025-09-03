@@ -73,8 +73,8 @@ jobs:
             NEW_VERSION=$(cz bump --dry-run | grep "bump: version" | sed 's/.*→ //')
             echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
-            # Update pyproject.toml version configuration before bumping
-            sed -i.bak "s/version = \"[^\"]*\"/version = \"$NEW_VERSION\"/" pyproject.toml
+            # Update only the commitizen version configuration before bumping
+            sed -i.bak "/^\[tool\.commitizen\]/,/^\[/ s/^version = \"[^\"]*\"/version = \"$NEW_VERSION\"/" pyproject.toml
             rm -f pyproject.toml.bak
 
             # Now run cz bump which will create a single commit with all changes
