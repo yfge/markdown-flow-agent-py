@@ -147,6 +147,33 @@ ruff check --fix && ruff format
 mypy markdown_flow/
 ```
 
+### Commitizen (Version Management)
+
+```bash
+# Install commitizen (first time)
+pip install commitizen
+
+# Check current version
+cz version
+
+# Bump version and create changelog (automatically follows semver)
+cz bump --increment PATCH    # Bug fixes (0.1.5 -> 0.1.6)
+cz bump --increment MINOR    # New features (0.1.5 -> 0.2.0)
+cz bump --increment MAJOR    # Breaking changes (0.1.5 -> 1.0.0)
+
+# Automatic version bump based on commit messages
+cz bump                      # Auto-detect increment level
+
+# Generate/update changelog
+cz changelog
+
+# Validate commit message format
+cz check --rev-range HEAD~1..HEAD
+
+# Interactive commit with conventional format
+cz commit
+```
+
 ### Testing
 
 ```bash
@@ -763,6 +790,9 @@ export PYTHONDONTWRITEBYTECODE=1  # Prevent .pyc files
 | Interaction parsing fails | Syntax errors | Check `?[]` syntax is correctly formatted |
 | Performance issues with large documents | Slow processing | Enable streaming mode and optimize batch sizes |
 | Type checking errors | MyPy warnings | Add proper type hints to function signatures |
+| Commitizen not found | `cz: command not found` | Install commitizen: `pip install commitizen` |
+| Commit message validation fails | Pre-commit hook rejects commit | Use conventional format: `type: description` or run `cz commit` |
+| Version bump fails | `cz bump` command errors | Check `cz.json` configuration and ensure clean git state |
 
 ### Debug Commands
 
@@ -831,6 +861,13 @@ You selected {{level}}.'''
 
 asyncio.run(test())
 "
+
+# Check Commitizen configuration and version
+cz version
+cz check --rev-range HEAD~5..HEAD
+
+# Test commitizen commit message validation
+echo "test: example commit message" | cz check --commit-msg-file -
 ```
 
 ### Logging and Monitoring
