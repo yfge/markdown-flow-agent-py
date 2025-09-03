@@ -65,21 +65,25 @@ The project follows a clean, modular architecture with clear separation of conce
 ### Core Components
 
 **MarkdownFlow (`core.py`)** - Main processing engine
+
 - Parses MarkdownFlow documents into structured blocks
 - Handles LLM interactions through unified `process()` interface
 - Manages variable substitution and preservation
 
 **Three-Layer Parsing Architecture:**
+
 1. **Document Level**: Splits content using `---` separators and `?[]` interaction patterns
 2. **Block Level**: Categorizes blocks as CONTENT, INTERACTION, or PRESERVED_CONTENT
 3. **Interaction Level**: Parses `?[]` formats into TEXT_ONLY, BUTTONS_ONLY, BUTTONS_WITH_TEXT, or NON_ASSIGNMENT_BUTTON types
 
 **LLM Integration (`llm.py`)** - Abstract provider interface
+
 - `PROMPT_ONLY`: Generate prompts without LLM calls
 - `COMPLETE`: Non-streaming LLM processing
 - `STREAM`: Streaming LLM responses
 
 **Utilities (`utils.py`)** - Core processing utilities
+
 - Variable extraction and replacement
 - Interaction parsing and validation
 - Template generation for smart validation
@@ -226,22 +230,26 @@ if result.stderr: print('Errors:', result.stderr)
 ### Core Classes
 
 **MarkdownFlow** - Main processing class
+
 - `__init__(content: str, llm_provider: LLMProvider = None)`
 - `get_all_blocks() -> List[Block]`
 - `extract_variables() -> Set[str]`
 - `process(block_index: int, mode: ProcessMode, variables: dict = None, user_input: str = None)`
 
 **ProcessMode** - Processing mode enumeration
+
 - `PROMPT_ONLY`: Generate prompts without LLM calls
 - `COMPLETE`: Non-streaming LLM processing
 - `STREAM`: Streaming LLM responses
 
 **BlockType** - Block type enumeration
+
 - `CONTENT`: Regular markdown content processed by LLM
 - `INTERACTION`: User input blocks with `?[]` syntax requiring validation
 - `PRESERVED_CONTENT`: Output-as-is blocks wrapped in `===` markers
 
 **InteractionType** - Interaction format enumeration
+
 - `TEXT_ONLY`: `?[%{{var}}...question]` - Text input with question
 - `BUTTONS_ONLY`: `?[%{{var}} A|B]` - Button selection only
 - `BUTTONS_WITH_TEXT`: `?[%{{var}} A|B|...question]` - Buttons with fallback text input
@@ -250,10 +258,12 @@ if result.stderr: print('Errors:', result.stderr)
 ### Utility Functions
 
 **Variable Management**
+
 - `extract_variables_from_text(text: str) -> Set[str]`
 - `replace_variables_in_text(text: str, variables: dict) -> str`
 
 **Interaction Processing**
+
 - `InteractionParser.parse(content: str) -> InteractionType`
 - `extract_interaction_question(content: str) -> str`
 - `generate_smart_validation_template(interaction_type: InteractionType) -> str`
@@ -263,11 +273,13 @@ if result.stderr: print('Errors:', result.stderr)
 ### Two Variable Formats
 
 **Replaceable Variables: `{{variable}}`**
+
 - Get substituted with actual values during processing
 - Used for content personalization
 - Example: `Hello {{name}}!` → `Hello John!`
 
 **Preserved Variables: `%{{variable}}`**
+
 - Kept in original format for LLM understanding
 - Used in interaction blocks for assignment
 - Example: `?[%{{level}} Beginner|Expert]` stays as-is
@@ -297,21 +309,25 @@ result = replace_variables_in_text(text, {'name': 'John', 'age': '25'})
 ### Supported Patterns
 
 **Text Input Only**
+
 ```markdown
 ?[%{{variable}} What is your question?]
 ```
 
 **Button Selection Only**
+
 ```markdown
 ?[%{{level}} Beginner|Intermediate|Expert]
 ```
 
 **Buttons with Text Fallback**
+
 ```markdown
 ?[%{{preference}} Option A|Option B|Please specify your preference]
 ```
 
 **Display-Only Buttons**
+
 ```markdown
 ?[Continue|Cancel|Go Back]
 ```
@@ -319,6 +335,7 @@ result = replace_variables_in_text(text, {'name': 'John', 'age': '25'})
 ### Button Value Separation
 
 Support for display text different from stored value:
+
 ```markdown
 ?[%{{choice}} Yes//1|No//0|Maybe//2]
 ```
@@ -487,6 +504,7 @@ class TestMarkdownFlow:
 **Required Format**: `<type>: <description>` (e.g., `feat: add stream processing support`)
 
 **Common Types**:
+
 - `feat:` - New feature
 - `fix:` - Bug fix
 - `docs:` - Documentation
@@ -499,6 +517,7 @@ class TestMarkdownFlow:
 - `build:` - Build system or dependencies
 
 **Style Rules**:
+
 - Type must be lowercase
 - Use imperative mood ("add", not "added")
 - Keep subject line ≤72 characters
@@ -508,18 +527,22 @@ class TestMarkdownFlow:
 ### File Naming Conventions
 
 **Python Modules**: Use snake_case
+
 - ✅ Correct: `markdown_flow/`, `core.py`, `utils.py`
 - ❌ Wrong: `MarkdownFlow/`, `Core.py`, `utilsHelper.py`
 
 **Test Files**: Use `test_` prefix
+
 - ✅ Correct: `test_core.py`, `test_utils.py`
 - ❌ Wrong: `core_test.py`, `CoreTests.py`
 
 **Configuration Files**: Use lowercase with dots
+
 - ✅ Correct: `.gitignore`, `pyproject.toml`, `.pre-commit-config.yaml`
 - ❌ Wrong: `GitIgnore`, `PyProject.TOML`
 
 **Documentation**: Use kebab-case
+
 - ✅ Correct: `api-reference.md`, `user-guide.md`
 - ❌ Wrong: `apiReference.md`, `user_guide.md`
 
@@ -528,6 +551,7 @@ class TestMarkdownFlow:
 The project uses comprehensive pre-commit hooks for code quality:
 
 **Automatic Checks**:
+
 - End-of-file fixer
 - Trailing whitespace removal
 - YAML syntax validation
@@ -537,6 +561,7 @@ The project uses comprehensive pre-commit hooks for code quality:
 - MyPy type checking (when configured)
 
 **Manual Execution**:
+
 ```bash
 # Install hooks (first time)
 pre-commit install
@@ -553,6 +578,7 @@ pre-commit run
 ### Python-Specific Optimizations
 
 **Pre-compiled Regex Patterns**: All regex patterns in `constants.py` are pre-compiled for performance
+
 ```python
 # Good: Pre-compiled pattern (done in constants.py)
 COMPILED_VARIABLE_PATTERN = re.compile(r'{{(.+?)}}')
@@ -562,6 +588,7 @@ result = re.findall(r'{{(.+?)}}', text)  # Compiles every time
 ```
 
 **Lazy Evaluation**: Use generators and lazy evaluation for large document processing
+
 ```python
 # Good: Generator for memory efficiency
 def get_blocks():
@@ -573,6 +600,7 @@ blocks = [process_block(block) for block in document_parts]
 ```
 
 **Memory Management**: Clear large objects when no longer needed
+
 ```python
 # Good: Explicit cleanup
 large_document = load_document()
@@ -582,6 +610,7 @@ return result
 ```
 
 **Async/await**: Use async patterns for LLM calls and I/O operations
+
 ```python
 # Good: Async processing
 async def process_with_llm(content):
@@ -597,6 +626,7 @@ def process_with_llm(content):
 ### LLM Integration Optimization
 
 **Connection Reuse**: Reuse LLM connections across requests
+
 ```python
 # Good: Reuse provider instance
 class MarkdownFlow:
@@ -605,6 +635,7 @@ class MarkdownFlow:
 ```
 
 **Error Handling**: Implement retry logic with exponential backoff
+
 ```python
 import asyncio
 import random
@@ -621,6 +652,7 @@ async def retry_with_backoff(func, max_retries=3):
 ```
 
 **Token Optimization**: Minimize prompt tokens while maintaining functionality
+
 ```python
 # Good: Concise prompt with essential context
 prompt = f"Process: {content[:500]}..."  # Truncate if too long
@@ -632,6 +664,7 @@ prompt = f"Please process the following content: {full_content}"
 ### Document Processing
 
 **Stream Processing**: Use streaming for large documents when possible
+
 ```python
 # Good: Streaming response
 async def process_stream(self, block_index: int):
@@ -645,6 +678,7 @@ async def process_complete(self, block_index: int):
 ```
 
 **Caching**: Cache parsed blocks and variable extractions
+
 ```python
 from functools import lru_cache
 
@@ -660,21 +694,25 @@ class MarkdownFlow:
 ### Branch Naming
 
 **Feature Development**:
+
 - `feat/description-of-feature` - New feature development
 - `feat/add-streaming-support` - Adding streaming capabilities
 - `feat/improve-variable-parsing` - Enhancing variable parsing
 
 **Bug Fixes**:
+
 - `fix/description-of-fix` - Bug fix
 - `fix/interaction-parsing-error` - Fix interaction parsing issue
 - `fix/memory-leak-in-processing` - Fix memory leak
 
 **Refactoring**:
+
 - `refactor/description` - Code refactoring
 - `refactor/simplify-core-logic` - Simplify core processing logic
 - `refactor/extract-utilities` - Extract utility functions
 
 **Documentation**:
+
 - `docs/description` - Documentation updates
 - `docs/update-api-reference` - Update API documentation
 - `docs/add-usage-examples` - Add usage examples
@@ -682,6 +720,7 @@ class MarkdownFlow:
 ### Pull Request Checklist
 
 **Before Creating PR**:
+
 - [ ] Code follows project conventions
 - [ ] Pre-commit hooks pass (`pre-commit run --all-files`)
 - [ ] Tests added/updated and passing
@@ -692,12 +731,14 @@ class MarkdownFlow:
 - [ ] Imports work correctly after installation
 
 **PR Title and Description**:
+
 - [ ] Title follows Conventional Commits format
 - [ ] Description explains what and why
 - [ ] Breaking changes clearly documented
 - [ ] Examples provided for new features
 
 **Code Review Requirements**:
+
 - [ ] All conversations resolved
 - [ ] No merge conflicts
 - [ ] CI/CD checks passing
@@ -731,16 +772,19 @@ twine upload dist/*
 ### Development Environment Setup
 
 **Python Version**: Python 3.10+ required
+
 - Project supports Python 3.10, 3.11, 3.12
 - Use `pyproject.toml` for dependency management
 - No runtime dependencies (lightweight package)
 
 **Development Dependencies** (manual installation):
+
 ```bash
 pip install pre-commit ruff mypy pytest pytest-cov
 ```
 
 **Environment Variables** (for development):
+
 ```bash
 # Optional: For testing with actual LLM providers
 export OPENAI_API_KEY="your-api-key"
@@ -754,6 +798,7 @@ export PYTHONDONTWRITEBYTECODE=1  # Prevent .pyc files
 ### IDE Configuration
 
 **VS Code** (`settings.json`):
+
 ```json
 {
     "python.linting.enabled": true,
@@ -772,6 +817,7 @@ export PYTHONDONTWRITEBYTECODE=1  # Prevent .pyc files
 ```
 
 **PyCharm/IntelliJ**:
+
 - Enable Ruff plugin for linting and formatting
 - Configure pytest as test runner
 - Enable pre-commit plugin
@@ -873,6 +919,7 @@ echo "test: example commit message" | cz check --commit-msg-file -
 ### Logging and Monitoring
 
 **Enable Debug Logging**:
+
 ```python
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -882,6 +929,7 @@ from markdown_flow import MarkdownFlow
 ```
 
 **Performance Monitoring**:
+
 ```python
 import time
 from functools import wraps
@@ -1037,4 +1085,4 @@ mf = ValidatedMarkdownFlow(document, llm_provider, validators)
 
 ---
 
-*This documentation is maintained by AI Shifu Team and the open source community.*
+_This documentation is maintained by AI Shifu Team and the open source community._

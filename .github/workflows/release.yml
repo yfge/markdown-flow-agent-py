@@ -1,0 +1,102 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install commitizen build twine
+
+      - name: Configure Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Bump version automatically
+        id: bump-version
+        run: |
+          # Check if we need to bump version based on conventional commits
+          if cz bump --dry-run --changelog 2>/dev/null; then
+            echo "bump_needed=true" >> $GITHUB_OUTPUT
+            cz bump --changelog --yes
+            git push origin main --follow-tags
+          else
+            echo "bump_needed=false" >> $GITHUB_OUTPUT
+            echo "No version bump needed based on commit messages"
+          fi
+
+      - name: Get version
+        id: version
+        run: |
+          VERSION=$(python -c "import markdown_flow; print(markdown_flow.__version__)")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check if tag exists
+        id: check-tag
+        run: |
+          if git tag -l "${{ steps.version.outputs.tag }}" | grep -q .; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build package
+        if: steps.bump-version.outputs.bump_needed == 'true' || steps.check-tag.outputs.exists == 'false'
+        run: |
+          python -m build
+
+      - name: Publish to PyPI
+        if: steps.bump-version.outputs.bump_needed == 'true' || steps.check-tag.outputs.exists == 'false'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_TOKEN }}
+          skip-existing: true
+
+      - name: Create GitHub Release
+        if: steps.bump-version.outputs.bump_needed == 'true' || steps.check-tag.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: Release ${{ steps.version.outputs.tag }}
+          body: |
+            ## Changes in ${{ steps.version.outputs.tag }}
+
+            See [CHANGELOG.md](https://github.com/ai-shifu/markdown-flow-agent-py/blob/main/CHANGELOG.md) for detailed changes.
+
+            ## Installation
+            ```bash
+            pip install markdown-flow==${{ steps.version.outputs.version }}
+            ```
+          files: |
+            dist/*
+          draft: false
+          prerelease: false
