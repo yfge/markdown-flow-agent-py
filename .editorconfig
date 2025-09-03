@@ -9,3 +9,29 @@ indent_size = 2
 
 [*.{js,ts,jsx,tsx}]
 quote_type = single
+
+[*.py]
+charset = utf-8
+indent_style = space
+indent_size = 4
+max_line_length = 200
+quote_type = double
+
+[*.{yml,yaml}]
+charset = utf-8
+indent_style = space
+indent_size = 2
+
+[*.{json,jsonc}]
+charset = utf-8
+indent_style = space
+indent_size = 2
+
+[*.{md,markdown}]
+charset = utf-8
+trim_trailing_whitespace = false
+
+[*.toml]
+charset = utf-8
+indent_style = space
+indent_size = 2
