@@ -146,6 +146,7 @@ disallow_incomplete_defs = false
 name = "cz_conventional_commits"
 version = "0.1.5"
 tag_format = "v$major.$minor.$patch"
+update_changelog_on_bump = true
 annotated_tag = true
 gpg_sign = false
 version_files = [
